@@ -1061,78 +1061,18 @@ void Arduboy2Base::initDraw(void)
 
 
 bool semCreate = false;
-void Arduboy2Base::display()
-{
-#ifdef ESP8266
-  static uint16_t oBuffer[WIDTH * 16];
-#else
-  if (!semCreate)
-  {
-    xSemaphoreDisplay = xSemaphoreCreateMutex();
-    semCreate = true;
-  }
-#endif
-  static uint16_t foregroundColor, backgroundColor;
-  foregroundColor = 1;
-  backgroundColor = 0;
-  static uint8_t currentDataByte;
-  static uint16_t xPos, yPos, kPos, kkPos, addr;
-  static int loc, xDst, yDst;
-
-  if (xSemaphoreTake(xSemaphoreDisplay, (TickType_t)2) == pdTRUE)
-  {
-    static uint16_t foregroundColor, backgroundColor;
-    foregroundColor = 1;
-    backgroundColor = 0;
-    static uint8_t currentDataByte;
-    static uint16_t xPos, yPos, kPos, kkPos, addr;
-    static int loc;
-    int xDst, yDst;
-    for (kPos = 0; kPos < 4; kPos++)
-    { //if exclude this 4 parts screen devision and process all the big oBuffer, EPS8266 resets (
-      kkPos = kPos << 1;
-      for (xPos = 0; xPos < WIDTH; xPos++)
-      {
-        for (yPos = 0; yPos < 16; yPos++)
-        {
-          if (!(yPos % 8))
-            currentDataByte = sBuffer[xPos + ((yPos >> 3) + kkPos) * WIDTH];
-#ifdef ESP8266
-          addr = yPos * WIDTH + xPos;
-          if (currentDataByte & 0x01)
-          {
-            oBuffer[addr] = foregroundColor;
-          }
-          else
-          {
-            oBuffer[addr] = backgroundColor;
-          }
-#else
-          xDst = xPos;
-          yDst = (yPos + kPos * 16);
-          loc = xDst + yDst * WIDTH;
-          frontBuffer[loc] = currentDataByte & 0x01;
-#endif
-          currentDataByte = currentDataByte >> 1;
-        }
-      }
-
-#ifdef ESP8266
-      // This is doing the quarter image write
-      screen.pushImage(0, 20 + kPos * 16, WIDTH, 16, oBuffer);
-#endif
+void Arduboy2Base::display() {
+  // Update display buffer handling for u8g2
+  for (int y = 0; y < HEIGHT; y++) {
+    for (int x = 0; x < WIDTH; x++) {
+      int bufferIndex = (y / 8) * WIDTH + x;
+      int bitPosition = y % 8;
+      bool pixel = sBuffer[bufferIndex] & (1 << bitPosition);
+      u8g2.setDrawColor(pixel ? 1 : 0);
+      u8g2.drawPixel(x, y);
     }
-    xSemaphoreGive(xSemaphoreDisplay);
   }
-#ifndef ESP8266
-  gamelastTime = gamecurrentTime;
-  gamecurrentTime = esp_timer_get_time();
-  gameframeTime = gamecurrentTime - gamelastTime;
-  gamefps = 1000000 / gameframeTime;
-
-  //Serial.write(printf("screen : %lld , game : %lld , input : %lld\r\n", fps, gamefps, inputfps));
-  this->initDraw();
-#endif
+  u8g2.sendBuffer();
 }
 
 

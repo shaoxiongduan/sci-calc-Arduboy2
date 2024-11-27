@@ -184,7 +184,7 @@ uint8_t Arduboy2Core::height() { return HEIGHT; }
 /* Drawing */
 
 void Arduboy2Core::paintScreen(const uint8_t *image){
-    //memcpy(sBuffer, image, HEIGHT*WIDTH/8);
+    memcpy(sBuffer, image, BUFFER_SIZE);
 };
 
 // paint from a memory buffer, this should be FAST as it's likely what
@@ -194,8 +194,10 @@ void Arduboy2Core::paintScreen(const uint8_t *image){
 // execution times to allow time for each byte of data to be clocked out.
 // It is specifically tuned for a 16MHz CPU clock and SPI clocking at 8MHz.
 void Arduboy2Core::paintScreen(uint8_t image[], bool clear){
-    //  memcpy(sBuffer, image, HEIGHT*WIDTH/8);
-    //  if (clear) memset(sBuffer, 0, HEIGHT*WIDTH/8);
+    memcpy(sBuffer, image, BUFFER_SIZE);
+    if (clear) {
+        memset(image, 0, BUFFER_SIZE);
+    }
 };
 
 /* RGB LED */
