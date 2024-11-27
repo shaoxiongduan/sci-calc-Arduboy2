@@ -128,8 +128,10 @@ extern U8G2_SSD1322_NHD_256X64_F_4W_HW_SPI u8g2;
 #define PAD_RGT         0x80
 #define PAD_ANY         0xff
 
-#define WIDTH 128 /**< The width of the display in pixels */
-#define HEIGHT 64 /**< The height of the display in pixels */
+#define WIDTH 256  // Changed from 128
+#define HEIGHT 64  // Keep same height
+
+#define BUFFER_SIZE (WIDTH * HEIGHT / 8)  // 2048 bytes for 256x64
 
 /** \brief
  * Lower level functions generally dealing directly with the hardware.
